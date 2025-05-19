@@ -1,9 +1,0 @@
-module.exports = (sequelize, DataTypes) => {
-  const SaleDetail = sequelize.define('SaleDetail', {
-    saleId: DataTypes.INTEGER,
-    productId: DataTypes.INTEGER,
-    quantity: DataTypes.INTEGER,
-    comment: DataTypes.TEXT,
-  });
-  return SaleDetail;
-};
