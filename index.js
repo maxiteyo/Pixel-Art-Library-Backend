@@ -3,23 +3,7 @@ require('dotenv').config();
 const app = express();
 const { Sequelize, DataTypes } = require('sequelize');
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    dialect: 'mysql',
-  },
-
-);
-
-
-
-// Import models
-
-const { User, Product, Sale, SaleDetail } = require('./models');
+const { sequelize, User, Product, Sale, SaleDetail } = require('./models'); // trae todo ya armado
 
 // Middleware
 app.use(express.json());
