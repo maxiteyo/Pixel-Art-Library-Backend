@@ -22,7 +22,7 @@ app.use('/users', userRouter);
 app.use('/sales', saleRouter);
 app.use('/sale-details', saleDetailRouter);
 
-sequelize.sync({force:true}).then(() => {
+sequelize.sync().then(() => {
   app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
   });
