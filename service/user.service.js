@@ -11,9 +11,47 @@ async function getUserById(userId) {
 const bcrypt = require('bcrypt');
 
 async function createUser(data) {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-  data.password = hashedPassword;
-  return await User.create(data);
+  try {
+    // Validar campos
+    const requiredFields = ['firstname', 'surname', 'email', 'password', 'phone', 'dni', 'address', 'city'];
+    for (const field of requiredFields) {
+      if (!data[field]) {
+        return { success: false, message: `El campo '${field}' es obligatorio` };
+      }
+    }
+
+    // Limpiar y normalizar el email (Gmail no distingue entre mayúsculas y minúsculas)
+    data.email = data.email.trim().toLowerCase();
+
+    // Verificar si ya existe
+    const existingUser = await User.findOne({ where: { email: data.email } });
+    if (existingUser) {
+      return { success: false, message: 'Ya existe un usuario con ese email' };
+    }
+
+    // Encriptar contraseña
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    data.password = hashedPassword;
+
+    // Crear usuario
+    const newUser = await User.create(data);
+
+    const { password, ...userData } = newUser.toJSON();
+    return {
+      success: true,
+      message: 'Usuario registrado correctamente',
+      user: userData
+    };
+
+  } catch (error) {
+    // Detección de error por duplicado
+    if (error instanceof Sequelize.UniqueConstraintError) {
+      return { success: false, message: 'Ese email ya está registrado', error: error.message };
+    }
+
+    console.error('Error al crear usuario:', error);
+    return { success: false, message: 'Error inesperado al crear usuario', error: error.message };
+  }
 }
 
 
