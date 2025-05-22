@@ -18,38 +18,23 @@ const sequelize = new Sequelize(
 
 
 // Import models
-const User = require('./models/User')(sequelize, DataTypes);
-const Product = require('./models/Product')(sequelize, DataTypes);
-const Sale = require('./models/Sale')(sequelize, DataTypes);
-const SaleDetail = require('./models/SaleDetail')(sequelize, DataTypes);
 
-// Relacionar modelos
-User.hasMany(Sale, { foreignKey: 'userId' });
-Sale.belongsTo(User, { foreignKey: 'userId' });
-
-Sale.hasOne(SaleDetail);
-SaleDetail.belongsTo(Sale);
-
-Product.hasMany(SaleDetail);
-SaleDetail.belongsTo(Product);
-
-module.exports = {
-  sequelize,
-  User,
-  Product,
-  Sale,
-  SaleDetail,
-};
+const { User, Product, Sale, SaleDetail } = require('./models');
 
 // Middleware
 app.use(express.json());
 
-// Agregar routers después
+// Importar routers
+const productRouter = require('./routers/product.router');
+const userRouter = require('./routers/user.router');
+const saleRouter = require('./routers/sale.router');
+const saleDetailRouter = require('./routers/saleDetail.router');
 
-app.post('/product', (req, res) => {
-    console.log(req.body);
-    res.status(201).json({ message: 'Producto recibido', data: req.body });
-});
+// Usar routers
+app.use('/products', productRouter);
+app.use('/users', userRouter);
+app.use('/sales', saleRouter);
+app.use('/sale-details', saleDetailRouter);
 
 sequelize.sync({force:true}).then(() => {
   app.listen(3000, () => {
