@@ -2,6 +2,8 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const { Sequelize, DataTypes } = require('sequelize');
+const cors = require('cors');
+app.use(cors());
 
 const { sequelize, User, Product, Sale, SaleDetail } = require('./models'); // trae todo ya armado
 
