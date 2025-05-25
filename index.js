@@ -1,6 +1,12 @@
 const express = require('express');
 require('dotenv').config();
 const app = express();
+<<<<<<< HEAD
+=======
+const { Sequelize, DataTypes } = require('sequelize');
+const cors = require('cors');
+app.use(cors());
+>>>>>>> d678575180388d5d4ef48985b01cdfb366f22266
 
 
 const {
@@ -36,7 +42,7 @@ app.use('/categories', categoryRouter);
 app.use('/subcategories', subcategoryRouter); 
 app.use('/cart', cartRouter); 
 
-sequelize.sync({force:true}).then(() => {
+sequelize.sync().then(() => {
   app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
   });
