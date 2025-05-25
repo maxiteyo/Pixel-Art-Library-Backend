@@ -42,5 +42,29 @@ router.post('/login', async (req, res) => {
   });
 });
 
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (!email || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Todos los campos son requeridos: email, newPassword, confirmPassword.' });
+    }
+
+    const result = await userService.resetPassword(email, newPassword, confirmPassword);
+
+    if (!result.success) {
+      // Usar 404 si el usuario no se encuentra, 400 para otras validaciones
+      const statusCode = result.message.includes('Usuario no encontrado') ? 404 : 400;
+      return res.status(statusCode).json({ message: result.message });
+    }
+
+    res.json({ message: result.message });
+
+  } catch (error) {
+    // Loggear el error en el servidor para depuración
+    console.error('Error en el endpoint /reset-password:', error);
+    res.status(500).json({ message: 'Error interno del servidor al procesar la solicitud.' });
+  }
+});
 
 module.exports = router;

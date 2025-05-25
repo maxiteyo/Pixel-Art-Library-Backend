@@ -7,11 +7,14 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    /*userId: {
+    userId: {
       type: DataTypes.INTEGER,
-      foreignkey: true,
-      autoincrement: true,
-    },*/
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'userId'
+      }
+    },
     date: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

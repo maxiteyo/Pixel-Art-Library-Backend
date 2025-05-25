@@ -54,8 +54,6 @@ async function createUser(data) {
   }
 }
 
-
-
 async function loginUser(email, plainPassword) {
   const user = await User.findOne({ where: { email } });
   if (!user) {
@@ -84,6 +82,38 @@ async function loginUser(email, plainPassword) {
   };
 }
 
+async function resetPassword(email, newPassword, confirmPassword) {
+  try {
+    // Validar que las contraseñas coincidan
+    if (newPassword !== confirmPassword) {
+      return { success: false, message: 'Las nuevas contraseñas no coinciden.' };
+    }
+
+    // Opcional: Añadir validación para la fortaleza de la contraseña
+    if (newPassword.length < 6) { // Ejemplo: mínimo 6 caracteres
+        return { success: false, message: 'La nueva contraseña debe tener al menos 6 caracteres.' };
+    }
+
+    // Buscar al usuario por email
+    const user = await User.findOne({ where: { email: email.trim().toLowerCase() } });
+    if (!user) {
+      return { success: false, message: 'Usuario no encontrado con el correo electrónico proporcionado.' };
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña del usuario
+    user.password = hashedPassword;
+    await user.save(); // Guarda los cambios en el usuario encontrado
+
+    return { success: true, message: 'Contraseña actualizada exitosamente.' };
+
+  } catch (error) {
+    console.error('Error al restablecer la contraseña:', error);
+    return { success: false, message: 'Error interno al intentar restablecer la contraseña.', error: error.message };
+  }
+}
 
 async function updateUser(userId, data) {
   return await User.update(data, { where: { userId } });
@@ -99,5 +129,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  loginUser
+  loginUser,
+  resetPassword
 };

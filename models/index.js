@@ -15,23 +15,43 @@ const User = require('./User')(sequelize, DataTypes);
 const Product = require('./Product')(sequelize, DataTypes);
 const Sale = require('./Sale')(sequelize, DataTypes);
 const SaleDetail = require('./SaleDetail')(sequelize, DataTypes);
+const Category = require('./Category')(sequelize, DataTypes);
+const Subcategory = require('./Subcategory')(sequelize, DataTypes);
+const Cart = require('./Cart')(sequelize, DataTypes);
+const CartProduct = require('./CartProduct')(sequelize, DataTypes); 
 
-// Definir relaciones
+// Relaciones
 User.hasMany(Sale, { foreignKey: 'userId' });
 Sale.belongsTo(User, { foreignKey: 'userId' });
 
-Sale.hasOne(SaleDetail);
-SaleDetail.belongsTo(Sale);
+User.hasOne(Cart, { foreignKey: 'userId' });
+Cart.belongsTo(User, { foreignKey: 'userId' });
 
-Product.hasMany(SaleDetail);
-SaleDetail.belongsTo(Product);
+//Se usa la tabla intermedia CartProduct para la relación muchos a muchos entre Cart y Product
+Cart.belongsToMany(Product, { through: 'CartProduct', foreignKey: 'cartId' });
+Product.belongsToMany(Cart, { through: 'CartProduct', foreignKey: 'productId' });
 
-// Exportar
+Sale.hasMany(SaleDetail, { foreignKey: 'saleId' });
+SaleDetail.belongsTo(Sale, { foreignKey: 'saleId' });
+
+Product.hasMany(SaleDetail, { foreignKey: 'productId' });
+SaleDetail.belongsTo(Product, { foreignKey: 'productId' });
+
+Subcategory.hasMany(Product, { foreignKey: 'subcategoryId' });
+Product.belongsTo(Subcategory, { foreignKey: 'subcategoryId' });
+
+Category.hasMany(Subcategory, { foreignKey: 'categoryId' });
+Subcategory.belongsTo(Category, { foreignKey: 'categoryId' });
+
 module.exports = {
   sequelize,
   User,
   Product,
   Sale,
-  SaleDetail
+  SaleDetail,
+  Category,
+  Subcategory,
+  Cart,
+  CartProduct
 };
 

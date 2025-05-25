@@ -5,6 +5,14 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
+        subcategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Subcategories',
+        key: 'subcategoryId'
+      }
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -33,8 +41,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    category: {
-      type: DataTypes.STRING,
+    starProduct: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
       allowNull: false,
     },
   });

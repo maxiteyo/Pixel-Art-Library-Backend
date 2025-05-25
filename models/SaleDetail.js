@@ -7,11 +7,19 @@ module.exports = (sequelize, DataTypes) => {
     },
     saleId: {
       type: DataTypes.INTEGER,
-      foreignkey: true,
+      allowNull: false,
+      references: {
+        model: 'Sales',
+        key: 'salesId'
+      }
     },
     productId: {
       type: DataTypes.INTEGER,
-      foreignkey: true,
+      allowNull: false,
+      references: {
+        model: 'Products',
+        key: 'productId'
+      }
     },
     quantity: {
       type: DataTypes.INTEGER,
