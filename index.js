@@ -1,12 +1,9 @@
 const express = require('express');
 require('dotenv').config();
 const app = express();
-<<<<<<< HEAD
-=======
 const { Sequelize, DataTypes } = require('sequelize');
 const cors = require('cors');
 app.use(cors());
->>>>>>> d678575180388d5d4ef48985b01cdfb366f22266
 
 
 const {
