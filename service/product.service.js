@@ -35,7 +35,6 @@ async function createProductWithImageUpload(productData, imageFile) {
   } catch (error) {
     console.error("Error creating product with image upload:", error);
     // Si el archivo fue subido y hubo un error guardando en DB,
-    // podrías considerar borrar la imagen de Cloudinary para evitar huérfanos.
     // Esto requiere guardar el public_id de la imagen de Cloudinary.
     // Por ahora, solo relanzamos el error.
     if (imageFile && imageFile.path && fs.existsSync(imageFile.path)) {
