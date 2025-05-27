@@ -12,6 +12,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// NUEVO ENDPOINT: GET todas las categorias CON SUS SUBCATEGORIAS
+router.get('/with-subcategories', async (req, res) => {
+  try {
+    const categoriesWithSubcategories = await categoryService.getAllCategoriesWithSubcategories();
+    res.json(categoriesWithSubcategories);
+  } catch (error) {
+    // Log el error en el servidor para depuración
+    console.error('Error al obtener categorías con subcategorías:', error);
+    res.status(500).json({ message: 'Error al obtener las categorías y sus subcategorías.' });
+  }
+});
+
 // GET una categoria por ID
 router.get('/:id', async (req, res) => {
   try {
@@ -63,5 +75,7 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 module.exports = router;
