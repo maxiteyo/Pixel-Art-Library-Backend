@@ -31,9 +31,44 @@ const upload = multer({
   }
 });
 
+router.get('/bysubcategory/:subcategoryId', async (req, res) => {
+  try {
+    const subcategoryId = parseInt(req.params.subcategoryId, 10);
+    if (isNaN(subcategoryId)) {
+      return res.status(400).json({ message: 'El ID de la subcategoría debe ser un número.' });
+    }
+
+    const products = await productService.getProductsBySubcategoryId(subcategoryId);
+    
+    if (products && products.length > 0) {
+      res.json(products);
+    } else {
+      // Si la subcategoría no existe (según la lógica opcional en el servicio) o no tiene productos
+      res.status(404).json({ message: 'No se encontraron productos para esta subcategoría o la subcategoría no existe.' });
+    }
+  } catch (error) {
+    console.error("Error en la ruta GET /products/bysubcategory/:subcategoryId :", error);
+    res.status(500).json({ message: 'Error al obtener los productos por subcategoría.', error: error.message });
+  }
+});
+
 router.get('/', async (req, res) => {
   const products = await productService.getAllProducts();
   res.json(products);
+});
+
+router.get('/star', async (req, res) => {
+  try {
+    const starProducts = await productService.getStarProducts();
+    if (starProducts && starProducts.length > 0) {
+      res.json(starProducts);
+    } else {
+      res.status(404).json({ message: 'No se encontraron productos estrella.' });
+    }
+  } catch (error) {
+    console.error("Error en la ruta GET /products/star:", error);
+    res.status(500).json({ message: 'Error al obtener los productos estrella.', error: error.message });
+  }
 });
 
 router.get('/:productId', async (req, res) => {

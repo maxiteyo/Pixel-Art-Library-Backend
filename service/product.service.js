@@ -1,6 +1,7 @@
-const { Product } = require('../models');
+const { Product, Subcategory } = require('../models');
 const cloudinary = require('../config/cloudinary.config');
 const fs = require('fs'); // File system para borrar el archivo local después de subirlo
+const { get } = require('http');
 
 
 async function getAllProducts() {
@@ -45,6 +46,39 @@ async function createProductWithImageUpload(productData, imageFile) {
   }
 }
 
+async function getProductsBySubcategoryId(subcategoryId) {
+  // Primero, podrías verificar si la subcategoría existe (opcional, pero buena práctica)
+  const subcategoryExists = await Subcategory.findByPk(subcategoryId);
+  if (!subcategoryExists) {
+    // Puedes lanzar un error o devolver un array vacío/mensaje específico
+    // throw new Error('Subcategory not found'); 
+    return []; // O devolver vacío si prefieres que el router maneje el 404 si no hay productos
+  }
+
+  return await Product.findAll({
+    where: { subcategoryId: subcategoryId },
+    include: [
+      {
+        model: Subcategory, // Opcional: para incluir los detalles de la subcategoría con cada producto
+        // attributes: ['name'] // Opcional: para seleccionar solo ciertos atributos de la subcategoría
+      }
+      // Podrías incluir otros modelos relacionados con Product si es necesario
+    ]
+  });
+}
+
+async function getStarProducts() {
+  return await Product.findAll({
+    where: { starProduct: true },
+    include: [ // Opcional: Incluir subcategoría u otros modelos si es necesario
+      {
+        model: Subcategory,
+        // attributes: ['name'] 
+      }
+    ]
+  });
+}
+
 async function updateProduct(productId, data) {
   return await Product.update(data, { where: { productId } });    
 }
@@ -65,4 +99,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductsByCategory,
+  getProductsBySubcategoryId,
+  getStarProducts
 };
