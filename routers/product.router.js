@@ -71,6 +71,28 @@ router.get('/star', async (req, res) => {
   }
 });
 
+// Se espera un parámetro de consulta, ej: /products/search?name=Lapiz
+router.get('/search', async (req, res) => {
+  try {
+    const searchTerm = req.query.name; // O podrías usar req.query.q o req.query.term
+
+    if (!searchTerm) {
+      return res.status(400).json({ message: 'Por favor, proporciona un término de búsqueda en el parámetro "name".' });
+    }
+
+    const products = await productService.searchProductsByName(searchTerm);
+
+    if (products && products.length > 0) {
+      res.json(products);
+    } else {
+      res.status(404).json({ message: `No se encontraron productos que coincidan con "${searchTerm}".` });
+    }
+  } catch (error) {
+    console.error("Error en la ruta GET /products/search:", error);
+    res.status(500).json({ message: 'Error al buscar productos.', error: error.message });
+  }
+});
+
 router.get('/:productId', async (req, res) => {
   const product = await productService.getProductById(req.params.productId);
   res.json(product);

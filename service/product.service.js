@@ -1,8 +1,7 @@
 const { Product, Subcategory } = require('../models');
 const cloudinary = require('../config/cloudinary.config');
 const fs = require('fs'); // File system para borrar el archivo local después de subirlo
-const { get } = require('http');
-
+const { Op } = require('sequelize');
 
 async function getAllProducts() {
   return await Product.findAll();
@@ -79,6 +78,24 @@ async function getStarProducts() {
   });
 }
 
+async function searchProductsByName(searchTerm) {
+  if (!searchTerm || searchTerm.trim() === '') {
+    return []; // Devuelve vacío si no hay término de búsqueda o está vacío
+  }
+  return await Product.findAll({
+    where: {
+      name: {
+        [Op.like]: `%${searchTerm}%` // Op.like para búsqueda insensible a mayúsculas/minúsculas
+      }
+    },
+    include: [ 
+      {
+        model: Subcategory,
+      }
+    ]
+  });
+}
+
 async function updateProduct(productId, data) {
   return await Product.update(data, { where: { productId } });    
 }
@@ -100,5 +117,6 @@ module.exports = {
   deleteProduct,
   getProductsByCategory,
   getProductsBySubcategoryId,
-  getStarProducts
+  getStarProducts,
+  searchProductsByName
 };
