@@ -1,6 +1,7 @@
-const { Product } = require('../models');
+const { Product, Subcategory } = require('../models');
 const cloudinary = require('../config/cloudinary.config');
 const fs = require('fs'); // File system para borrar el archivo local después de subirlo
+const { get } = require('http');
 
 
 async function getAllProducts() {
@@ -35,7 +36,6 @@ async function createProductWithImageUpload(productData, imageFile) {
   } catch (error) {
     console.error("Error creating product with image upload:", error);
     // Si el archivo fue subido y hubo un error guardando en DB,
-    // podrías considerar borrar la imagen de Cloudinary para evitar huérfanos.
     // Esto requiere guardar el public_id de la imagen de Cloudinary.
     // Por ahora, solo relanzamos el error.
     if (imageFile && imageFile.path && fs.existsSync(imageFile.path)) {
@@ -44,6 +44,39 @@ async function createProductWithImageUpload(productData, imageFile) {
     }
     throw error;
   }
+}
+
+async function getProductsBySubcategoryId(subcategoryId) {
+  // Primero, podrías verificar si la subcategoría existe (opcional, pero buena práctica)
+  const subcategoryExists = await Subcategory.findByPk(subcategoryId);
+  if (!subcategoryExists) {
+    // Puedes lanzar un error o devolver un array vacío/mensaje específico
+    // throw new Error('Subcategory not found'); 
+    return []; // O devolver vacío si prefieres que el router maneje el 404 si no hay productos
+  }
+
+  return await Product.findAll({
+    where: { subcategoryId: subcategoryId },
+    include: [
+      {
+        model: Subcategory, // Opcional: para incluir los detalles de la subcategoría con cada producto
+        // attributes: ['name'] // Opcional: para seleccionar solo ciertos atributos de la subcategoría
+      }
+      // Podrías incluir otros modelos relacionados con Product si es necesario
+    ]
+  });
+}
+
+async function getStarProducts() {
+  return await Product.findAll({
+    where: { starProduct: true },
+    include: [ // Opcional: Incluir subcategoría u otros modelos si es necesario
+      {
+        model: Subcategory,
+        // attributes: ['name'] 
+      }
+    ]
+  });
 }
 
 async function updateProduct(productId, data) {
@@ -66,4 +99,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductsByCategory,
+  getProductsBySubcategoryId,
+  getStarProducts
 };
