@@ -134,14 +134,88 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-router.put('/:productId', async (req, res) => {
-  const updated = await productService.updateProduct(req.params.productId, req.body);
-  res.json(updated);
+router.put('/:productId', upload.single('image'), async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ message: 'El ID del producto debe ser un número.' });
+    }
+
+    // Convertir campos numéricos y booleanos de req.body
+    // Es importante hacer esto incluso si no todos los campos vienen en cada actualización.
+    // Si un campo no viene, req.body.campo será undefined, y parseInt(undefined) es NaN.
+    // El servicio debería manejar los campos undefined o puedes filtrarlos aquí.
+    const productDataToUpdate = {};
+
+    // Campos de texto (se copian si existen)
+    if (req.body.name !== undefined) productDataToUpdate.name = req.body.name;
+    if (req.body.brand !== undefined) productDataToUpdate.brand = req.body.brand;
+    if (req.body.color !== undefined) productDataToUpdate.color = req.body.color;
+    if (req.body.description !== undefined) productDataToUpdate.description = req.body.description;
+    
+    // Campo de imagen: si se envía 'image' como una cadena vacía o null,
+    // se interpretará como una solicitud para eliminar la imagen existente.
+    // Si se sube un nuevo archivo, req.file tendrá precedencia.
+    // Si no se envía 'image' en req.body y no se sube archivo, la imagen no se toca (a menos que el servicio lo maneje diferente).
+    if (req.body.image !== undefined) productDataToUpdate.image = req.body.image;
+
+
+    // Campos numéricos (se convierten si existen)
+    if (req.body.subcategoryId !== undefined) {
+      productDataToUpdate.subcategoryId = parseInt(req.body.subcategoryId, 10);
+      if (isNaN(productDataToUpdate.subcategoryId)) return res.status(400).json({ message: 'subcategoryId inválido.' });
+    }
+    if (req.body.price !== undefined) {
+      productDataToUpdate.price = parseFloat(req.body.price);
+      if (isNaN(productDataToUpdate.price)) return res.status(400).json({ message: 'price inválido.' });
+    }
+    if (req.body.stock !== undefined) {
+      productDataToUpdate.stock = parseInt(req.body.stock, 10);
+      if (isNaN(productDataToUpdate.stock)) return res.status(400).json({ message: 'stock inválido.' });
+    }
+
+    // Campo booleano (se convierte si existe)
+    if (req.body.starProduct !== undefined) {
+      productDataToUpdate.starProduct = req.body.starProduct === 'true' || req.body.starProduct === true;
+    }
+    
+    // req.file es el nuevo archivo 'image' si se subió uno
+    const updatedProduct = await productService.updateProduct(productId, productDataToUpdate, req.file);
+
+    if (!updatedProduct) { // Si el servicio devuelve null o undefined porque no encontró el producto
+      return res.status(404).json({ message: 'Producto no encontrado.' });
+    }
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error(`Error en la ruta PUT /products/${req.params.productId}:`, error);
+    if (error.message === 'Producto no encontrado') {
+      return res.status(404).json({ message: error.message });
+    }
+    // Manejar otros errores específicos si es necesario
+    res.status(500).json({ message: 'Error al actualizar el producto.', error: error.message });
+  }
 });
 
 router.delete('/:productId', async (req, res) => {
-  const deleted = await productService.deleteProduct(req.params.productId);
-  res.json({ deleted });
+  try {
+    const productId = parseInt(req.params.productId, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ message: 'El ID del producto debe ser un número.' });
+    }
+
+    const result = await productService.deleteProduct(productId);
+
+    // Asumiendo que si no hay error, se eliminó (o el error 'Producto no encontrado' se lanzó)
+    res.status(200).json({ message: result.message || 'Producto eliminado exitosamente.' }); // O simplemente res.sendStatus(204) para No Content
+
+  } catch (error) {
+    console.error(`Error en la ruta DELETE /products/${req.params.productId}:`, error);
+    if (error.message === 'Producto no encontrado') {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error al eliminar el producto.', error: error.message });
+  }
 });
 
 module.exports = router;
