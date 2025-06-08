@@ -5,61 +5,100 @@ async function getCartByUserId(userId) {
     where: { userId },
     include: [{
       model: Product,
-      through: { attributes: ['quantity'] } // Para obtener la cantidad de CartProduct
+      through: { attributes: ['quantity'] } 
     }]
   });
 
   if (!cart) {
-    // Si el usuario no tiene carrito, se puede crear uno vacío
     const user = await User.findByPk(userId);
-    if (!user) throw new Error('User not found');
-    cart = await Cart.create({ userId });
-    // Recargar para incluir la estructura de productos (aunque estará vacía)
+    if (!user) throw new Error('Usuario no encontrado');
+    const newCartInstance = await Cart.create({ userId });
+    // Recargar para obtener la estructura completa con asociaciones (aunque productos estará vacío)
     cart = await Cart.findOne({
-        where: { userId },
+        where: { cartId: newCartInstance.cartId },
         include: [{
           model: Product,
           through: { attributes: ['quantity'] }
         }]
       });
   }
-  return cart;
+
+  let totalPrice = 0;
+  if (cart && cart.Products) {
+    cart.Products.forEach(product => {
+      if (product.CartProduct) { // Asegurarse que CartProduct existe
+        totalPrice += product.price * product.CartProduct.quantity;
+      }
+    });
+  }
+
+  const cartJSON = cart.toJSON();
+  cartJSON.totalPrice = parseFloat(totalPrice.toFixed(2)); // Añadir el precio total al objeto
+
+  return cartJSON;
 }
 
 async function addProductToCart(userId, productId, quantity = 1) {
-  const cart = await getCartByUserId(userId); // Asegura que el carrito exista
+  if (quantity <= 0) {
+    throw new Error('La cantidad debe ser un numero positivo.');
+  }
+
+  let cart = await Cart.findOne({ where: { userId } });
+  let cartId;
+
+  if (!cart) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('Usario no encontrado');
+    const newCart = await Cart.create({ userId });
+    cartId = newCart.cartId;
+  } else {
+    cartId = cart.cartId;
+  }
+  
   const product = await Product.findByPk(productId);
 
   if (!product) {
-    throw new Error('Product not found');
+    throw new Error('Producto no encontrado');
   }
 
   const cartProduct = await CartProduct.findOne({
-    where: { cartId: cart.cartId, productId: productId }
+    where: { cartId: cartId, productId: productId }
   });
 
   if (cartProduct) {
-    // Si el producto ya está en el carrito, actualiza la cantidad
-    cartProduct.quantity += quantity;
+    const newQuantity = cartProduct.quantity + quantity;
+    if (product.stock < newQuantity) {
+      throw new Error(`No hay suficiente stock para ${product.name}. Disponible: ${product.stock}, Total solicitado: ${newQuantity}`);
+    }
+    cartProduct.quantity = newQuantity;
     await cartProduct.save();
   } else {
-    // Si no está, lo agrega
-    await cart.addProduct(product, { through: { quantity: quantity } });
+    if (product.stock < quantity) {
+      throw new Error(`No hay suficiente stock para ${product.name}. Disponible: ${product.stock}, Solicitado: ${quantity}`);
+    }
+    await CartProduct.create({ cartId: cartId, productId: productId, quantity: quantity });
   }
 
-  return await getCartByUserId(userId); // Devuelve el carrito actualizado
+  return await getCartByUserId(userId);
 }
 
 async function updateProductQuantityInCart(userId, productId, quantity) {
-  if (quantity <= 0) {
+  if (quantity <= 0) { // Si la cantidad es 0 o menos, se elimina el producto del carrito
     return await removeProductFromCart(userId, productId);
   }
 
-  const cart = await getCartByUserId(userId);
-  const product = await Product.findByPk(productId);
+  const cart = await Cart.findOne({ where: { userId } });
+  if (!cart) {
+      throw new Error('Carrito no enconctrado para el usuario.');
+  }
 
+  const product = await Product.findByPk(productId);
   if (!product) {
-    throw new Error('Product not found');
+    throw new Error('Producto no encontrado');
+  }
+
+  if (product.stock < quantity) {
+    throw new Error(`No hay suficiente stock para ${product.name}. Disponible: ${product.stock}, Solicitado: ${quantity}`);
   }
 
   const cartProduct = await CartProduct.findOne({
@@ -70,23 +109,28 @@ async function updateProductQuantityInCart(userId, productId, quantity) {
     cartProduct.quantity = quantity;
     await cartProduct.save();
   } else {
-    throw new Error('Product not in cart');
+    throw new Error('Producto no encontrado en el carrito. Usa "añadir" para agregar un nuevo producto.');
   }
   return await getCartByUserId(userId);
 }
 
 async function removeProductFromCart(userId, productId) {
-  const cart = await getCartByUserId(userId);
+  const cart = await Cart.findOne({ where: { userId } });
+   if (!cart) {
+      throw new Error('Carrito no encontrado para el usuario.');
+  }
   const product = await Product.findByPk(productId);
 
   if (!product) {
-    throw new Error('Product not found');
+    throw new Error('Producto no encontrado');
   }
 
-  const result = await cart.removeProduct(product); // Sequelize se encarga de la tabla intermedia
+  const result = await CartProduct.destroy({
+      where: { cartId: cart.cartId, productId: productId }
+  });
 
-  if (!result) { // `removeProduct` devuelve 0 o 1 dependiendo si se eliminó algo
-      throw new Error('Product not found in cart or could not be removed.');
+  if (result === 0) { 
+      throw new Error('Producto no encontrado en el carrito o no se pudo eliminar.');
   }
 
   return await getCartByUserId(userId);
