@@ -13,8 +13,21 @@ router.get('/:userId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const newUser = await userService.createUser(req.body);
-  res.status(201).json(newUser);
+  const result = await userService.createUser(req.body);
+  console.log('Resultado de userService.createUser:', result); // <--- LOG DE DEBUG
+
+  if (!result.success) {
+    console.log('userService.createUser indicó !result.success. Mensaje:', result.message); // <--- LOG DE DEBUG
+    if (result.message && (result.message.toLowerCase().includes('ya existe un usuario con ese email') || result.message.toLowerCase().includes('ese email ya está registrado'))) {
+      console.log('Enviando 409 Conflict por email duplicado.'); // <--- LOG DE DEBUG
+      return res.status(409).json({ success: false, message: result.message }); // Asegúrate de incluir success: false
+    }
+    console.log('Enviando 400 Bad Request por otro error de creación.'); // <--- LOG DE DEBUG
+    return res.status(400).json({ success: false, message: result.message }); // Asegúrate de incluir success: false
+  }
+
+  console.log('Usuario creado exitosamente. Enviando 201 Created.'); // <--- LOG DE DEBUG
+  res.status(201).json(result); // result ya debería ser { success: true, user: ..., message: ... }
 });
 
 router.put('/:userId', async (req, res) => {
