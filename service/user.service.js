@@ -78,7 +78,10 @@ async function loginUser(email, plainPassword) {
     success: true,
     message: 'Login exitoso',
     token,
-    user: { id: user.userId, email: user.email, rol: user.rol }
+    user: { id: user.userId, email: user.email, rol: user.rol, 
+    firstname: user.firstname,
+    surname: user.surname,
+    phone: user.phone }
   };
 }
 
