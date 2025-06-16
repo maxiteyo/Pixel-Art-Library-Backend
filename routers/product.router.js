@@ -59,17 +59,34 @@ router.get('/', async (req, res) => {
 
 router.get('/star', async (req, res) => {
   try {
-    const starProducts = await productService.getStarProducts();
-    if (starProducts && starProducts.length > 0) {
-      res.json(starProducts);
-    } else {
+    // Obtener parámetros de paginación de la query string
+    // Establecer valores por defecto si no se proporcionan
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 4; // Traer de a 4 por defecto
+
+    if (page <= 0) {
+      return res.status(400).json({ message: 'El número de página debe ser positivo.' });
+    }
+    if (limit <= 0) {
+      return res.status(400).json({ message: 'El límite de productos por página debe ser positivo.' });
+    }
+
+    const paginatedResults = await productService.getStarProducts(page, limit);
+
+    if (paginatedResults && paginatedResults.products && paginatedResults.products.length > 0) {
+      res.json(paginatedResults);
+    } else if (paginatedResults && paginatedResults.totalItems === 0) {
+      // Si no hay productos estrella en total
       res.status(404).json({ message: 'No se encontraron productos estrella.' });
+    } else {
+      res.json(paginatedResults); // Devuelve el objeto con products: [] y la info de paginación
     }
   } catch (error) {
     console.error("Error en la ruta GET /products/star:", error);
     res.status(500).json({ message: 'Error al obtener los productos estrella.', error: error.message });
   }
-});
+}); //Para probar: http://localhost:3000/products/star?page=1&limit=4
+// Obtener la primera pagina de productos estrella con un límite de 4 productos por página
 
 // Se espera un parámetro de consulta, ej: /products/search?name=Lapiz
 router.get('/search', async (req, res) => {

@@ -1,4 +1,4 @@
-const { Product, Subcategory } = require('../models');
+const { Product, Subcategory, sequelize } = require('../models');
 const cloudinary = require('../config/cloudinary.config');
 const fs = require('fs'); // File system para borrar el archivo local después de subirlo
 const { Op } = require('sequelize');
@@ -66,16 +66,34 @@ async function getProductsBySubcategoryId(subcategoryId) {
   });
 }
 
-async function getStarProducts() {
-  return await Product.findAll({
-    where: { starProduct: true },
-    include: [ // Opcional: Incluir subcategoría u otros modelos si es necesario
-      {
-        model: Subcategory,
-        // attributes: ['name'] 
-      }
-    ]
-  });
+async function getStarProducts(page = 1, limit = 4) { // Valores por defecto para page y limit
+  try {
+    const offset = (page - 1) * limit;
+
+    // Usamos findAndCountAll para obtener los productos y el conteo total para la paginación
+    const { count, rows } = await Product.findAndCountAll({
+      where: { starProduct: true },
+      include: [
+        {
+          model: Subcategory,
+          // attributes: ['name'] // Descomenta si solo quieres ciertos atributos
+        }
+      ],
+      limit: parseInt(limit, 10), // Asegurar que limit sea un número
+      offset: parseInt(offset, 10), // Asegurar que offset sea un número
+      order: [['productId', 'ASC']], // Opcional: define un orden para la paginación consistente
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+      products: rows,
+    };
+  } catch (error) {
+    console.error("Error al obtener productos estrella con paginación:", error);
+    throw error;
+  }
 }
 
 async function searchProductsByName(searchTerm) {
