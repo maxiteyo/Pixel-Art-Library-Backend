@@ -3,8 +3,26 @@ const router = express.Router();
 const userService = require('../service/user.service');
 
 router.get('/', async (req, res) => {
-  const users = await userService.getAllUsers();
-  res.json(users);
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10; // Por defecto 10 usuarios por página
+
+    if (page <= 0) {
+      return res.status(400).json({ message: 'El número de página debe ser positivo.' });
+    }
+    if (limit <= 0) {
+      return res.status(400).json({ message: 'El límite de usuarios por página debe ser positivo.' });
+    }
+
+    const paginatedResults = await userService.getAllUsers(page, limit);
+
+    // Si totalItems es 0, el frontend recibirá users: [] y la info de paginación.
+    res.json(paginatedResults);
+
+  } catch (error) {
+    console.error("Error en la ruta GET /users (todos):", error);
+    res.status(500).json({ message: 'Error al obtener todos los usuarios.', error: error.message });
+  }
 });
 
 router.get('/:userId', async (req, res) => {

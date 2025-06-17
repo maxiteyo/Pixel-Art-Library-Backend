@@ -3,8 +3,33 @@ const cloudinary = require('../config/cloudinary.config');
 const fs = require('fs'); // File system para borrar el archivo local después de subirlo
 const { Op } = require('sequelize');
 
-async function getAllProducts() {
-  return await Product.findAll();
+async function getAllProducts(page = 1, limit = 10) { // Valores por defecto para page y limit (10 para admin)
+  try {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Product.findAndCountAll({
+      include: [
+        {
+          model: Subcategory, // Incluir Subcategoría para mostrar más info al admin
+          // attributes: ['name'] // Opcional: si solo quieres el nombre de la subcategoría
+        }
+      ],
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+      order: [['productId', 'ASC']], // Opcional: para un orden consistente
+      // distinct: true, // Usar si los includes causan duplicados y necesitas contar correctamente
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+      products: rows,
+    };
+  } catch (error) {
+    console.error("Error al obtener todos los productos con paginación:", error);
+    throw error;
+  }
 }
 
 async function getProductById(productId) {

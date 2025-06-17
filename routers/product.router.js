@@ -53,9 +53,30 @@ router.get('/bysubcategory/:subcategoryId', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-  const products = await productService.getAllProducts();
-  res.json(products);
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10; // Por defecto 10 para la vista de admin
+
+    if (page <= 0) {
+      return res.status(400).json({ message: 'El número de página debe ser positivo.' });
+    }
+    if (limit <= 0) {
+      return res.status(400).json({ message: 'El límite de productos por página debe ser positivo.' });
+    }
+
+    const paginatedResults = await productService.getAllProducts(page, limit);
+
+    // Similar al de /star.
+    // Si totalItems es 0, el frontend recibirá products: [] y la info de paginación.
+    res.json(paginatedResults);
+
+  } catch (error) {
+    console.error("Error en la ruta GET /products (todos):", error);
+    res.status(500).json({ message: 'Error al obtener todos los productos.', error: error.message });
+  }
 });
+//http://localhost:3000/products?page=1&limit=10
+//Obtener primera pagina de productos con un límite de 10 productos por página
 
 router.get('/star', async (req, res) => {
   try {

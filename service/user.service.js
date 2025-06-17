@@ -1,7 +1,27 @@
 const { User } = require('../models');
 
-async function getAllUsers() {
-  return await User.findAll();
+async function getAllUsers(page = 1, limit = 10) { // Valores por defecto para page y limit
+  try {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await User.findAndCountAll({
+      attributes: { exclude: ['password'] }, // Excluir el campo password de la respuesta
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+      order: [['userId', 'ASC']], // Opcional: para un orden consistente
+      // distinct: true, // Usar si los includes causan duplicados y necesitas contar correctamente
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+      users: rows, // Cambiado de 'products' a 'users' para claridad
+    };
+  } catch (error) {
+    console.error("Error al obtener todos los usuarios con paginación:", error);
+    throw error; // Relanzar para que el router lo maneje
+  }
 }
 
 async function getUserById(userId) {
