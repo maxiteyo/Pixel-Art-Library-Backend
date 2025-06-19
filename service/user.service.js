@@ -1,4 +1,5 @@
-const { User } = require('../models');
+const { User, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 async function getAllUsers(page = 1, limit = 10) { // Valores por defecto para page y limit
   try {
@@ -21,6 +22,42 @@ async function getAllUsers(page = 1, limit = 10) { // Valores por defecto para p
   } catch (error) {
     console.error("Error al obtener todos los usuarios con paginación:", error);
     throw error; // Relanzar para que el router lo maneje
+  }
+}
+
+async function searchUsers(searchTerm, page = 1, limit = 10) {
+  try {
+    const offset = (page - 1) * limit;
+    const query = `%${searchTerm}%`; // Prepara el término de búsqueda para LIKE
+
+    const { count, rows } = await User.findAndCountAll({
+      where: {
+        [Op.or]: [
+          { firstname: { [Op.like]: query } },
+          { surname: { [Op.like]: query } },
+          { dni: { [Op.like]: query } },
+          // Buscar en la concatenación de nombre y apellido
+          sequelize.where(
+            sequelize.fn('CONCAT', sequelize.col('firstname'), ' ', sequelize.col('surname')),
+            { [Op.like]: query }
+          )
+        ]
+      },
+      attributes: { exclude: ['password'] },
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+      order: [['surname', 'ASC'], ['firstname', 'ASC']],
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page, 10),
+      users: rows,
+    };
+  } catch (error) {
+    console.error("Error al buscar usuarios:", error);
+    throw error;
   }
 }
 
@@ -148,6 +185,7 @@ async function deleteUser(userId) {
 
 module.exports = {
   getAllUsers,
+  searchUsers,
   getUserById,
   createUser,
   updateUser,

@@ -25,6 +25,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  try {
+    const { q, page, limit } = req.query; // 'q' será el término de búsqueda
+
+    if (!q || q.trim() === '') {
+      return res.status(400).json({ message: 'Se requiere un término de búsqueda.' });
+    }
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+
+    const results = await userService.searchUsers(q, pageNum, limitNum);
+    res.json(results);
+
+  } catch (error) {
+    console.error("Error en la ruta GET /users/search:", error);
+    res.status(500).json({ message: 'Error al buscar usuarios.', error: error.message });
+  }
+});
+
 router.get('/:userId', async (req, res) => {
   const user = await userService.getUserById(req.params.userId);
   res.json(user);
