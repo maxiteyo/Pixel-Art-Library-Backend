@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const cartService = require('../service/cart.service');
 const verifyToken = require('../middlewares/auth.middleware');
+const authMiddleware = require('../middlewares/auth.middleware');
 
 router.use(verifyToken); // Aplica a todas las rutas del carrito
 
@@ -61,6 +62,25 @@ router.put('/update', async (req, res) => {
         return res.status(404).json({ message: error.message });
     }
     res.status(500).json({ message: 'Fallo al actualizar producto en el carrito.' });
+  }
+});
+
+// Actualizar el carrito completo (sincronización)
+router.put('/sync', verifyToken ,async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { products } = req.body; // Esperamos un array de { productId, quantity }
+
+    if (!Array.isArray(products)) {
+      return res.status(400).json({ message: 'El formato de los productos es inválido.' });
+    }
+
+    await cartService.syncCart(userId, products);
+    res.status(200).json({ message: 'Carrito actualizado correctamente.' });
+
+  } catch (error) {
+    console.error("Error al sincronizar el carrito:", error);
+    res.status(500).json({ message: 'Error interno al actualizar el carrito.' });
   }
 });
 

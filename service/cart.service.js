@@ -136,9 +136,43 @@ async function removeProductFromCart(userId, productId) {
   return await getCartByUserId(userId);
 }
 
+async function syncCart(userId, products) {
+  const { sequelize } = require('../models'); // Asegurarse de que sequelize esté disponible
+  const transaction = await sequelize.transaction();
+  try {
+    const cart = await Cart.findOne({ where: { userId } });
+    if (!cart) throw new Error('Carrito no encontrado para este usuario.');
+
+    // 1. Borrar todos los productos actuales del carrito
+    // CORRECCIÓN: La opción 'transaction' va dentro del primer objeto.
+    await CartProduct.destroy({
+      where: { cartId: cart.cartId },
+      transaction // Shorthand para transaction: transaction
+    });
+
+    // 2. Añadir los nuevos productos con sus cantidades actualizadas
+    if (products && products.length > 0) {
+      const itemsToAdd = products.map(p => ({
+        cartId: cart.cartId,
+        productId: p.productId,
+        quantity: p.quantity
+      }));
+
+      await CartProduct.bulkCreate(itemsToAdd, { transaction });
+    }
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error en el servicio al sincronizar el carrito:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   getCartByUserId,
   addProductToCart,
   updateProductQuantityInCart,
   removeProductFromCart,
+  syncCart
 };
