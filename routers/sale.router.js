@@ -27,6 +27,16 @@ router.get('/', checkRole('admin') ,async (req, res) => {
   }
 });
 
+router.get('/history', async (req, res) => {
+  try {
+    const sales = await saleService.getSalesByUserId(req.user.id);
+    res.json(sales);
+  } catch (error) {
+    console.error("Error en la ruta GET /sales/history:", error);
+    res.status(500).json({ message: 'Error al obtener el historial de compras.' });
+  }
+});
+
 router.get('/:saleId', async (req, res) => {
   try {
     const sale = await saleService.getSaleById(req.params.saleId);
@@ -91,6 +101,8 @@ router.delete('/:saleId', async (req, res) => { // <-- Añadido checkRole para s
     res.status(500).json({ message: 'Error al eliminar la venta.', error: error.message });
   }
 });
+
+
 
 module.exports = router;
 

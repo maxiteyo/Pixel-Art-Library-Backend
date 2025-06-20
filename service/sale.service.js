@@ -50,6 +50,13 @@ async function getSaleById(saleId) {
   });
 }
 
+async function getSalesByUserId(userId) {
+  return await Sale.findAll({
+    where: { userId },
+    order: [['date', 'DESC']] // Ordenar de más reciente a más antigua
+  });
+}
+
 async function createSale(userId) {
   // Iniciar una transacción para asegurar la integridad de los datos
   const t = await sequelize.transaction();
@@ -129,6 +136,7 @@ async function deleteSale(saleId) {
 module.exports = {
   getAllSales,
   getSaleById,
+  getSalesByUserId,
   createSale,
   updateSale,
   deleteSale,
