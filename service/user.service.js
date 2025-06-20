@@ -176,6 +176,12 @@ async function resetPassword(email, newPassword, confirmPassword) {
 }
 
 async function updateUser(userId, data) {
+  // Medida de seguridad: No permitir la actualización de la contraseña o el rol a través de esta función.
+  delete data.password;
+  delete data.rol;
+  delete data.userId; // No se debe poder cambiar el ID
+
+  // La función devuelve un array con el número de filas afectadas.
   return await User.update(data, { where: { userId } });
 }
 

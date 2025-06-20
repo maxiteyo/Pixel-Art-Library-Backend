@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('../service/user.service');
+const verifyToken = require('../middlewares/auth.middleware'); 
 
 router.get('/', async (req, res) => {
   try {
@@ -68,10 +69,32 @@ router.post('/', async (req, res) => {
   res.status(201).json(result); // result ya debería ser { success: true, user: ..., message: ... }
 });
 
-router.put('/:userId', async (req, res) => {
-  const updated = await userService.updateUser(req.params.userId, req.body);
-  res.json(updated);
+router.put('/:userId', verifyToken, async (req, res) => {
+  try {
+    // Lógica de autorización SIMPLIFICADA:
+    // Un usuario (sea admin o no) SOLO puede modificar su propio perfil.
+    // Comparamos el ID del token con el ID de la URL.
+    if (req.user.id != req.params.userId) {
+      return res.status(403).json({ message: 'Acción no permitida. Solo puedes modificar tu propia información.' });
+    }
+
+    // El resto de la lógica permanece igual, ya que el servicio es seguro.
+    const [numberOfAffectedRows] = await userService.updateUser(req.params.userId, req.body);
+
+    if (numberOfAffectedRows > 0) {
+      // Si la actualización fue exitosa, busca y devuelve el usuario actualizado.
+      const updatedUser = await userService.getUserById(req.params.userId);
+      res.json(updatedUser);
+    } else {
+      // Si no se afectó ninguna fila, es probable que el usuario no exista.
+      res.status(404).json({ message: 'Usuario no encontrado o no se realizaron cambios.' });
+    }
+  } catch (error) {
+    console.error(`Error en la ruta PUT /users/${req.params.userId}:`, error);
+    res.status(500).json({ message: 'Error al actualizar el usuario.', error: error.message });
+  }
 });
+
 
 router.delete('/:userId', async (req, res) => {
   const deleted = await userService.deleteUser(req.params.userId);

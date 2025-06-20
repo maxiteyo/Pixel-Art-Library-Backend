@@ -49,18 +49,47 @@ router.get('/:saleId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const newSale = await saleService.createSale(req.body);
-  res.status(201).json(newSale);
+  try {
+    // La única información que necesitamos es el ID del usuario autenticado.
+    // El servicio se encargará de obtener el carrito y procesar todo.
+    const userId = req.user.id;
+    const newSale = await saleService.createSale(userId);
+    res.status(201).json(newSale);
+  } catch (error) {
+    console.error("Error en la ruta POST /sales:", error);
+    // Devolver errores específicos al cliente
+    if (error.message.includes('Stock insuficiente') || error.message.includes('carrito vacío')) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error al procesar la venta.', error: error.message });
+  }
 });
 
-router.put('/:saleId', async (req, res) => {
-  const updated = await saleService.updateSale(req.params.saleId, req.body);
-  res.json(updated);
+router.put('/:saleId', async (req, res) => { // <-- Añadido checkRole para seguridad
+  try {
+    const [numberOfAffectedRows] = await saleService.updateSale(req.params.saleId, req.body);
+    if (numberOfAffectedRows > 0) {
+      const updatedSale = await saleService.getSaleById(req.params.saleId);
+      return res.json(updatedSale);
+    }
+    return res.status(404).json({ message: 'Venta no encontrada o no se realizaron cambios.' });
+  } catch (error) {
+    console.error(`Error en la ruta PUT /sales/${req.params.saleId}:`, error);
+    res.status(500).json({ message: 'Error al actualizar la venta.', error: error.message });
+  }
 });
 
-router.delete('/:saleId', async (req, res) => {
-  const deleted = await saleService.deleteSale(req.params.saleId);
-  res.json({ deleted });
+router.delete('/:saleId', async (req, res) => { // <-- Añadido checkRole para seguridad
+  try {
+    const deleted = await saleService.deleteSale(req.params.saleId);
+    if (deleted > 0) {
+      return res.json({ message: 'Venta eliminada exitosamente.' });
+    }
+    return res.status(404).json({ message: 'Venta no encontrada.' });
+  } catch (error) {
+    console.error(`Error en la ruta DELETE /sales/${req.params.saleId}:`, error);
+    res.status(500).json({ message: 'Error al eliminar la venta.', error: error.message });
+  }
 });
 
 module.exports = router;
