@@ -8,14 +8,8 @@ async function getAllSales(page = 1, limit = 10) { // Valores por defecto para p
       include: [
         {
           model: User,
-          attributes: ['userId', 'name', 'email'] // Incluir info del usuario, excluyendo password
-        },
-        // Opcional: Incluir SaleDetails si quieres un resumen en la lista.
-        // Puede hacer la consulta más pesada si hay muchos detalles por venta.
-        // {
-        //   model: SaleDetail,
-        //   include: [{ model: Product, attributes: ['name'] }] // Para ver el nombre del producto
-        // }
+          as: 'User', 
+          attributes: ['userId', 'firstname', 'surname', 'dni', 'email']         },
       ],
       limit: parseInt(limit, 10),
       offset: parseInt(offset, 10),

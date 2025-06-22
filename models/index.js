@@ -22,7 +22,7 @@ const CartProduct = require('./CartProduct')(sequelize, DataTypes);
 
 // Relaciones
 User.hasMany(Sale, { foreignKey: 'userId' });
-Sale.belongsTo(User, { foreignKey: 'userId' });
+Sale.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 
 User.hasOne(Cart, { foreignKey: 'userId' });
 Cart.belongsTo(User, { foreignKey: 'userId' });

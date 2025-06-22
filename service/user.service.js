@@ -126,9 +126,9 @@ async function loginUser(email, plainPassword) {
   const jwt = require('jsonwebtoken');
   // Crear token con info básica del usuario
   const token = jwt.sign(
-    { id: user.userId, email: user.email },
+    { id: user.userId, email: user.email, role: user.rol},
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '24h' }
   );
 
   return {
