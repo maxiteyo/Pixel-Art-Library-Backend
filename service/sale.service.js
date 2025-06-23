@@ -34,7 +34,8 @@ async function getSaleById(saleId) {
     include: [
       {
         model: User,
-        attributes: { exclude: ['password'] }
+        as: 'User', // ---> ¡ESTA ES LA LÍNEA QUE HAY QUE AÑADIR! <--- exclude: ['password']
+        attributes: [ 'firstname', 'surname', 'dni', 'phone', 'email' ] // Incluir atributos específicos del usuario
       },
       {
         model: SaleDetail,
