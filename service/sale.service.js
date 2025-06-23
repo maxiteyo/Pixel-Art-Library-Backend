@@ -109,7 +109,7 @@ async function createSale(userId) {
     await t.commit();
 
     // Devolver la venta recién creada
-    return await getSaleById(newSale.salesId);
+    return await getSaleById(newSale.saleId);
 
   } catch (error) {
     // 7. Si algo falló, revertir todos los cambios
