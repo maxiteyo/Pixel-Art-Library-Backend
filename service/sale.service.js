@@ -34,6 +34,7 @@ async function getSaleById(saleId) {
     include: [
       {
         model: User,
+        as: 'User', // ---> ¡ESTA ES LA LÍNEA QUE HAY QUE AÑADIR! <---
         attributes: { exclude: ['password'] }
       },
       {
