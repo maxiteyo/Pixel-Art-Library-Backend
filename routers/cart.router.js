@@ -9,7 +9,7 @@ router.use(verifyToken); // Aplica a todas las rutas del carrito
 // GET carrito del usuario
 router.get('/', async (req, res) => { 
   try {
-    const userId = req.user.id; // CORREGIDO: Usar req.user.id
+    const userId = req.user.id;
     const cart = await cartService.getCartByUserId(userId);
     res.json(cart);
   } catch (error) {
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 // POST agregar producto al carrito 
 router.post('/add', async (req, res) => {
   try {
-    const userId = req.user.id; // CORREGIDO: Usar req.user.id
+    const userId = req.user.id;
     const { productId, quantity } = req.body;
     if (!productId || quantity === undefined ) { 
         return res.status(400).json({ message: 'productId y quantity son requeridos.' });
@@ -46,7 +46,7 @@ router.post('/add', async (req, res) => {
 // PUT actualizar cantidad de producto en el carrito 
 router.put('/update', async (req, res) => {
   try {
-    const userId = req.user.id; // CORREGIDO: Usar req.user.id
+    const userId = req.user.id;
     const { productId, quantity } = req.body;
      if (!productId || quantity === undefined) {
         return res.status(400).json({ message: 'productId y quantity son requeridos.' });
@@ -87,7 +87,7 @@ router.put('/sync', verifyToken ,async (req, res) => {
 // DELETE remover producto del carrito
 router.delete('/remove', async (req, res) => {
   try {
-    const userId = req.user.id; // CORREGIDO: Usar req.user.id
+    const userId = req.user.id;
     const { productId } = req.body; 
     if (!productId) {
         return res.status(400).json({ message: 'productId es requerido.' });

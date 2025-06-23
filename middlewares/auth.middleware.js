@@ -17,7 +17,7 @@ function verifyToken(req, res, next) {
 
     // 3. Adjuntar el usuario al request para usarlo más adelante
     req.user = user;
-    next(); // ✅ sigue a la ruta protegida
+    next(); // sigue a la ruta protegida
   });
 }
 

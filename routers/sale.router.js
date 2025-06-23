@@ -37,6 +37,20 @@ router.get('/history', async (req, res) => {
   }
 });
 
+router.put('/:saleId/complete', checkRole('admin'), async (req, res) => {
+  try {
+    const { saleId } = req.params;
+    const updatedSale = await saleService.completeSale(parseInt(saleId));
+    res.json({ message: 'Venta marcada como completada.', sale: updatedSale });
+  } catch (error) {
+    console.error(`Error en la ruta PUT /sales/${req.params.saleId}/complete:`, error);
+    if (error.message.includes('Venta no encontrada') || error.message.includes('Solo se pueden completar')) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error al completar la venta.' });
+  }
+});
+
 router.get('/:saleId', async (req, res) => {
   try {
     const sale = await saleService.getSaleById(req.params.saleId);
@@ -75,7 +89,27 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:saleId', async (req, res) => { // <-- Añadido checkRole para seguridad
+router.put('/:saleId/cancel', async (req, res) => {
+  try {
+    const { saleId } = req.params;
+    const { id: userId, role: userRole } = req.user;
+
+    const updatedSale = await saleService.cancelSale(parseInt(saleId), userId, userRole);
+    res.json({ message: 'Venta cancelada exitosamente.', sale: updatedSale });
+
+  } catch (error) {
+    console.error(`Error en la ruta PUT /sales/${req.params.saleId}/cancel:`, error);
+    if (error.message.includes('No autorizado')) {
+      return res.status(403).json({ message: error.message });
+    }
+    if (error.message.includes('Venta no encontrada') || error.message.includes('No se puede cancelar')) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error al cancelar la venta.' });
+  }
+});
+
+router.put('/:saleId', async (req, res) => {
   try {
     const [numberOfAffectedRows] = await saleService.updateSale(req.params.saleId, req.body);
     if (numberOfAffectedRows > 0) {
@@ -89,7 +123,7 @@ router.put('/:saleId', async (req, res) => { // <-- Añadido checkRole para segu
   }
 });
 
-router.delete('/:saleId', async (req, res) => { // <-- Añadido checkRole para seguridad
+router.delete('/:saleId', async (req, res) => {
   try {
     const deleted = await saleService.deleteSale(req.params.saleId);
     if (deleted > 0) {

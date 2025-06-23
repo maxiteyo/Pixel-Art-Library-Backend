@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// NUEVO ENDPOINT: GET todas las categorias CON SUS SUBCATEGORIAS
+// GET todas las categorias CON SUS SUBCATEGORIAS
 router.get('/with-subcategories', async (req, res) => {
   try {
     const categoriesWithSubcategories = await categoryService.getAllCategoriesWithSubcategories();
@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
-    if (updatedCategory[0]) { // Sequelize update returns an array [numberOfAffectedRows]
+    if (updatedCategory[0]) { 
       res.json({ message: 'Category updated successfully' });
     } else {
       res.status(404).json({ message: 'Category not found' });

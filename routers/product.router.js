@@ -18,9 +18,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB para el archivo (opcional)
+  limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB para el archivo
   fileFilter: function (req, file, cb) {
-    // Filtra para aceptar solo ciertos tipos de imágenes (opcional)
+    // Filtra para aceptar solo ciertos tipos de imágenes
     const filetypes = /jpeg|jpg|png|gif|webp/;
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -66,7 +66,6 @@ router.get('/', async (req, res) => {
 
     const paginatedResults = await productService.getAllProducts(page, limit);
 
-    // Similar al de /star.
     // Si totalItems es 0, el frontend recibirá products: [] y la info de paginación.
     res.json(paginatedResults);
 

@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    unityprice: { //precio por unidad de producto (quizas podria poner el subtotal)
+    unityprice: { //precio por unidad de producto
       type: DataTypes.FLOAT,
       allowNull: false,
     },
