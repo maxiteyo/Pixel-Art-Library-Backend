@@ -34,7 +34,7 @@ async function getSaleById(saleId) {
     include: [
       {
         model: User,
-        as: 'User', // ---> ¡ESTA ES LA LÍNEA QUE HAY QUE AÑADIR! <--- exclude: ['password']
+        as: 'User', 
         attributes: [ 'firstname', 'surname', 'dni', 'phone', 'email' ] // Incluir atributos específicos del usuario
       },
       {
@@ -85,7 +85,7 @@ async function createSale(userId) {
       userId: userId,
       date: new Date(),
       status: 'pending',
-      total: calculatedTotal // <-- Aquí se usa el total calculado
+      total: calculatedTotal
     }, { transaction: t });
 
     // 4. Crear los Detalles de Venta (SaleDetail) y actualizar el stock

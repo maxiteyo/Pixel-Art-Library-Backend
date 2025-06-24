@@ -24,7 +24,7 @@ async function getAllCategoriesWithSubcategories() {
   return await Category.findAll({
     include: [{
       model: Subcategory,
-      as: 'Subcategories' // Opcional: define un alias para el array de subcategorías. Por defecto sería 'Subcategories' si el modelo es Subcategory.
+      as: 'Subcategories' 
     }]
   });
 }

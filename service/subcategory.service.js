@@ -1,7 +1,7 @@
-const { Subcategory, Category } = require('../models'); // Category puede ser útil para validaciones o includes
+const { Subcategory, Category } = require('../models');
 
 async function getAllSubcategories() {
-  return await Subcategory.findAll({ include: Category }); // Opcional: incluir la categoria padre
+  return await Subcategory.findAll({ include: Category }); 
 }
 
 async function getSubcategoryById(subcategoryId) {

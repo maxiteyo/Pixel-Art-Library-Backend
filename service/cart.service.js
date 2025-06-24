@@ -144,7 +144,7 @@ async function syncCart(userId, products) {
     if (!cart) throw new Error('Carrito no encontrado para este usuario.');
 
     // 1. Borrar todos los productos actuales del carrito
-    // CORRECCIÓN: La opción 'transaction' va dentro del primer objeto.
+
     await CartProduct.destroy({
       where: { cartId: cart.cartId },
       transaction // Shorthand para transaction: transaction

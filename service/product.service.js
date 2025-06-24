@@ -11,13 +11,11 @@ async function getAllProducts(page = 1, limit = 10) { // Valores por defecto par
       include: [
         {
           model: Subcategory, // Incluir Subcategoría para mostrar más info al admin
-          // attributes: ['name'] // Opcional: si solo quieres el nombre de la subcategoría
         }
       ],
       limit: parseInt(limit, 10),
       offset: parseInt(offset, 10),
-      order: [['productId', 'ASC']], // Opcional: para un orden consistente
-      // distinct: true, // Usar si los includes causan duplicados y necesitas contar correctamente
+      order: [['productId', 'ASC']], 
     });
 
     return {
@@ -74,19 +72,15 @@ async function getProductsBySubcategoryId(subcategoryId) {
   // Primero, podrías verificar si la subcategoría existe (opcional, pero buena práctica)
   const subcategoryExists = await Subcategory.findByPk(subcategoryId);
   if (!subcategoryExists) {
-    // Puedes lanzar un error o devolver un array vacío/mensaje específico
-    // throw new Error('Subcategory not found'); 
-    return []; // O devolver vacío si prefieres que el router maneje el 404 si no hay productos
+    return []; 
   }
 
   return await Product.findAll({
     where: { subcategoryId: subcategoryId },
     include: [
       {
-        model: Subcategory, // Opcional: para incluir los detalles de la subcategoría con cada producto
-        // attributes: ['name'] // Opcional: para seleccionar solo ciertos atributos de la subcategoría
+        model: Subcategory,
       }
-      // Podrías incluir otros modelos relacionados con Product si es necesario
     ]
   });
 }
@@ -101,7 +95,6 @@ async function getStarProducts(page = 1, limit = 4) { // Valores por defecto par
       include: [
         {
           model: Subcategory,
-          // attributes: ['name'] // Descomenta si solo quieres ciertos atributos
         }
       ],
       limit: parseInt(limit, 10), // Asegurar que limit sea un número
@@ -193,8 +186,8 @@ async function updateProduct(productId, productData, newImageFile) {
     // se conserva la imagen existente (newImageUrl ya tiene product.image).
 
     // Actualizar los campos del producto
-    // Asegúrate de que productData contenga los campos que quieres actualizar.
-    // Los campos que no estén en productData no se modificarán (si usas product.update).
+    // Asegurarse de que productData contenga los campos que quieres actualizar.
+    // Los campos que no estén en productData no se modificarán (si se usa product.update).
     const updatedProductData = {
       ...productData, // Los campos de texto y numéricos ya convertidos desde el router
       image: newImageUrl, // La URL de la nueva imagen o la existente o null
@@ -246,9 +239,6 @@ async function deleteProduct(productId) {
           console.log(`Imagen '${publicIdWithFolder}' eliminada de Cloudinary para el producto ${productId}.`);
         } catch (cloudinaryError) {
           console.error(`Error al eliminar la imagen '${publicIdWithFolder}' de Cloudinary:`, cloudinaryError);
-          // Decide si quieres detener la eliminación del producto por esto.
-          // Generalmente, es mejor continuar y eliminar el producto de la BD,
-          // pero registrar el error de Cloudinary.
         }
       }
     }
