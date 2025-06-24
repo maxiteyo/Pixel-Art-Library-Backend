@@ -119,48 +119,51 @@ async function createSale(userId) {
   }
 }
 
-async function cancelSale(saleId, userId, userRole) {
-  const t = await sequelize.transaction();
+async function cancelSale(saleId, requestingUserId, userRole) {
+  // Envolvemos TODA la lógica en un bloque try...catch para garantizar
+  // que cualquier error sea manejado y no rompa el servidor.
   try {
-    const sale = await Sale.findByPk(saleId, {
-      include: [SaleDetail], // Incluimos los detalles para saber qué productos reponer
-      transaction: t
-    });
+    const sale = await Sale.findByPk(saleId);
 
     if (!sale) {
       throw new Error('Venta no encontrada.');
     }
 
-    // Autorización: Un admin puede cancelar cualquier venta, un usuario solo las suyas.
-    if (userRole !== 'admin' && sale.userId !== userId) {
-      throw new Error('No autorizado para cancelar esta venta.');
+    if (userRole !== 'admin' && sale.userId !== requestingUserId) {
+      throw new Error('No tienes permiso para cancelar esta venta.');
     }
 
-    // Verificación: Solo se pueden cancelar ventas pendientes.
     if (sale.status !== 'pending') {
-      throw new Error(`No se puede cancelar una venta con estado '${sale.status}'.`);
+      throw new Error('Solo se pueden cancelar ventas que están pendientes.');
     }
 
-    // Reponer el stock de cada producto en la venta
-    for (const detail of sale.SaleDetails) {
-      await Product.increment('stock', {
-        by: detail.quantity,
-        where: { productId: detail.productId },
-        transaction: t
-      });
-    }
+    // Usamos una transacción para asegurar que todas las operaciones
+    // se completen con éxito o no se haga ninguna.
+    const result = await sequelize.transaction(async (t) => {
+      const saleDetails = await SaleDetail.findAll({ where: { saleId: sale.salesId }, transaction: t });
 
-    // Actualizar el estado de la venta a 'cancelled'
-    sale.status = 'cancelled';
-    await sale.save({ transaction: t });
+      for (const detail of saleDetails) {
+        await Product.increment('stock', {
+          by: detail.quantity,
+          where: { productId: detail.productId },
+          transaction: t
+        });
+      }
 
-    await t.commit();
-    return sale;
+      sale.status = 'cancelled';
+      await sale.save({ transaction: t });
+
+      return sale;
+    });
+
+    return result;
 
   } catch (error) {
-    await t.rollback();
-    console.error("Error al cancelar la venta:", error);
-    throw error; // Propagar el error para que el router lo maneje
+    // Si algo falla en el 'try', lo capturamos aquí.
+    console.error(`Error en el servicio al cancelar la venta ${saleId}:`, error);
+    // Y lanzamos un nuevo error con un mensaje claro. Este error será
+    // atrapado por el router, que enviará una respuesta JSON correcta.
+    throw new Error(error.message || 'Ocurrió un error interno al cancelar la venta.');
   }
 }
 
