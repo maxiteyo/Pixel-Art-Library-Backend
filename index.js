@@ -39,7 +39,7 @@ app.use('/categories', categoryRouter);
 app.use('/subcategories', subcategoryRouter); 
 app.use('/cart', cartRouter); 
 
-sequelize.sync({alter: true}).then(() => {
+sequelize.sync({alter: true }).then(() => {
   app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');
   });

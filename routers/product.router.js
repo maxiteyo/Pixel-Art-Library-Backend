@@ -31,6 +31,13 @@ const upload = multer({
   }
 });
 
+// --- Función Helper para normalizar precios ---
+function normalizePrice(priceString) {
+  if (typeof priceString !== 'string') return priceString;
+  // Simplemente reemplaza la coma por un punto. parseFloat se encargará del resto.
+  return priceString.replace(',', '.');
+}
+
 router.get('/bysubcategory/:subcategoryId', async (req, res) => {
   try {
     const subcategoryId = parseInt(req.params.subcategoryId, 10);
@@ -152,7 +159,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     const productData = {
       ...req.body,
       subcategoryId: parseInt(req.body.subcategoryId, 10),
-      price: parseFloat(req.body.price),
+      price: parseFloat(normalizePrice(req.body.price)), // <-- CORRECCIÓN AQUÍ
       stock: parseInt(req.body.stock, 10),
       starProduct: req.body.starProduct === 'true' || req.body.starProduct === true || false,
     };
@@ -203,7 +210,7 @@ router.put('/:productId', upload.single('image'), async (req, res) => {
       if (isNaN(productDataToUpdate.subcategoryId)) return res.status(400).json({ message: 'subcategoryId inválido.' });
     }
     if (req.body.price !== undefined) {
-      productDataToUpdate.price = parseFloat(req.body.price);
+      productDataToUpdate.price = parseFloat(normalizePrice(req.body.price)); // <-- CORRECCIÓN AQUÍ
       if (isNaN(productDataToUpdate.price)) return res.status(400).json({ message: 'price inválido.' });
     }
     if (req.body.stock !== undefined) {
